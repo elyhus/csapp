@@ -231,7 +231,7 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return !(x^0) & 1;
+  return  ((x|(~x+1))>>31)+1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -246,9 +246,21 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  int y=0x7fffffff & x; 
-  (x>>1^1);   
-  return 1;
+  int sign = x >> 31;
+  int b16, b8, b4, b2, b1;
+
+  x = x ^ sign;
+  b16 = (!!(x >> 16)) << 4;
+  x = x >> b16;
+  b8 = (!!(x >> 8)) << 3;
+  x = x >> b8;
+  b4 = (!!(x >> 4)) << 2;
+  x = x >> b4;
+  b2 = (!!(x >> 2)) << 1;
+  x = x >> b2;
+  b1 = !!(x >> 1);
+  x = x >> b1;
+  return b16 + b8 + b4 + b2 + b1 + x + 1;
 }
 //float
 /* 
@@ -280,11 +292,21 @@ return uf+0x00800000;
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  if(!((uf<<1 & 0xFF000000) ^ 0xFF000000)){return 0x80000000; }; 
-  int z=uf>>23<<23+(~127+1));  
-  if()  
-  while(i>=(uf>>23<<23+(~127+1)));
-    x=x
+   int exponent=((uf&0x7fffffff)>>23)+(~127+1);
+   if(exponent<0){return 0;}
+   int fraction=(((uf<<8&0x7fffffff)>>8)|0x00800000);
+   int result;
+   if(exponent==0){
+   result=1;}
+   else if(exponent>=31){return 0x80000000;}
+   else if(exponent<23){ 
+   result=fraction>>(23+(~(exponent)+1));
+}else{
+   result=fraction<<(exponent+(~23+1));
+   };
+   if(uf & 0x80000000){return ~result+1;};
+   return result;
+
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -300,5 +322,14 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  if (x < -149)
+    return 0;
+
+  if (x < -126)
+    return 1 << (x + 149);
+
+  if (x <= 127)
+    return (x + 127) << 23;
+
+  return 0x7f800000;
 }
